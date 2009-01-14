@@ -256,13 +256,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 
 	//Scrobbler
 	connect(&scrobbler, SIGNAL(authFailed(const int)), this, SLOT(showPreferencesDialog(const int)));
-	connect(this, SIGNAL(submitSong()), &scrobbler, SLOT(checkForSubmission()), Qt::QueuedConnection);
-	connect(this, SIGNAL(stopSong()), &scrobbler, SLOT(stopScrobblerTimer()), Qt::DirectConnection);
-	connect(this, SIGNAL(startSong()), &scrobbler, SLOT(startScrobbleTimer()), Qt::DirectConnection);
-	connect(this, SIGNAL(pauseSong()), &scrobbler, SLOT(pauseScrobblerTimer()), Qt::DirectConnection);
-	connect(this, SIGNAL(resumeSong()), &scrobbler, SLOT(resumeScrobblerTimer()), Qt::DirectConnection);
+	connect(this, SIGNAL(stopSong()), &scrobbler, SLOT(stopScrobblerTimer()));
+	connect(this, SIGNAL(startSong()), &scrobbler, SLOT(startScrobbleTimer()));
+	connect(this, SIGNAL(pauseSong()), &scrobbler, SLOT(pauseScrobblerTimer()));
+	connect(this, SIGNAL(resumeSong()), &scrobbler, SLOT(resumeScrobblerTimer()));
 	connect(this, SIGNAL(nowPlaying(QString, QString, QString, quint32, quint32)),
-					 &scrobbler, SLOT(nowPlaying(QString, QString, QString, quint32, quint32)), Qt::QueuedConnection);
+					 &scrobbler, SLOT(nowPlaying(QString, QString, QString, quint32, quint32)));
 
 	splitter->restoreState(settings.value("splitterSizes").toByteArray());
 
@@ -430,10 +429,8 @@ void MainWindow::searchMusicLibrary()
 
 void MainWindow::updateCurrentSong(const Song *song)
 {
+	qWarning() << "Song update at" << QString::number(QDateTime::currentDateTime().toTime_t());
 	QSettings settings;
-	if (settings.value("lastfm/enabled", "false").toBool()) {
-		emit submitSong();
-	}
 
 	// Determine if album cover should be updated
 	if(trackArtistLabel->text() != song->artist || trackAlbumLabel->text() != song->album) {
@@ -487,8 +484,8 @@ void MainWindow::updateCurrentSong(const Song *song)
 	toolTipText += "album:  " + song->album + "\n";
 
 	if (settings.value("lastfm/enabled", "false").toBool()) {
-		emit nowPlaying(song->artist, song->album, song->title, song->track, song->time);
 		emit startSong();
+		emit nowPlaying(song->artist, song->album, song->title, song->track, song->time);
 	}
 
 	delete song;
@@ -621,7 +618,7 @@ void MainWindow::updateStatus()
 		else if (lastState != MPDStatus::State_Stopped &&
 			status->state() == MPDStatus::State_Stopped){
 			emit stopSong();
-			emit submitSong();
+			//emit submitSong();
 		}
 	}
 

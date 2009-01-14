@@ -277,7 +277,6 @@ bool LastFmScrobbler::handShake()
  */
 void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, quint32 track, quint32 length)
 {
-	//QMutexLocker locker(&songs_lock);
 	//First add the song
 	current_song.artist = QUrl::toPercentEncoding(artist.toUtf8());
 	current_song.title = QUrl::toPercentEncoding(title.toUtf8());
@@ -427,6 +426,7 @@ void LastFmScrobbler::resumeScrobblerTimer()
  */
 void LastFmScrobbler::startScrobbleTimer()
 {
+	checkForSubmission();
 	QMutexLocker locker(&songs_lock);
 	timePlayed = 0;
 	startPlayingDateTime = QDateTime::currentDateTime();
@@ -434,6 +434,7 @@ void LastFmScrobbler::startScrobbleTimer()
 
 void LastFmScrobbler::stopScrobblerTimer()
 {
+	checkForSubmission();
 	QMutexLocker locker(&songs_lock);
 	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
 	startPlayingDateTime = QDateTime::currentDateTime();
@@ -449,15 +450,17 @@ void LastFmScrobbler::checkForSubmission()
 {
 	QMutexLocker locker(&songs_lock);
 
-	if (current_song.length == 0)
+	if (current_song.length == 0) {
+		qWarning() << "no song length";
 		return;
+	}
 
 	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
 
 	if (timePlayed > 240 || timePlayed > current_song.length/2) {
 		songs.append(current_song);
 		submission();
-	} 
+	}
 }
 
 void LastFmScrobbler::clearAuth(bool enabled)
