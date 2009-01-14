@@ -324,7 +324,6 @@ void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, q
 				break;
 			continue;
 		}
-		qWarning() << "Now Playing Submitted";
 
 		QString data(output.data());
 		QStringList output_lines = data.split("\n", QString::SkipEmptyParts);
