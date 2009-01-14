@@ -483,8 +483,8 @@ void MainWindow::updateCurrentSong(const Song *song)
 	toolTipText += "album:  " + song->album + "\n";
 
 	if (settings.value("lastfm/enabled", "false").toBool()) {
-		emit startSong();
 		emit nowPlaying(song->artist, song->album, song->title, song->track, song->time);
+		emit startSong();
 	}
 
 	delete song;
