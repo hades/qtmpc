@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE MPD_database [
+<!ELEMENT MPD_database (Artist+)>
+<!ELEMENT Artist (Album+)>
+<!ELEMENT Album (Track+)>
+<!ELEMENT Track ()>
+
+<!ATTLIST Artist name CDATA #REQUIRED>
+<!ATTLIST Album title CDATA #REQUIRED>
+<!ATTLIST Track title CDATA #REQUIRED>
+<!ATTLIST Track filename CDATA #REQUIRED>
+<!ATTLIST Track track CDATA #IMPLIED>
+<!ATTLIST Track disc CDATA #IMPLIED>
+]>

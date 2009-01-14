@@ -1,0 +1,309 @@
+<ui version="4.0" >
+ <class>PreferencesDialog</class>
+ <widget class="QWidget" name="PreferencesDialog" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>616</width>
+    <height>409</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" >
+   <item>
+    <layout class="QHBoxLayout" >
+     <property name="bottomMargin" >
+      <number>18</number>
+     </property>
+     <item>
+      <widget class="QLabel" name="label_4" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Maximum" hsizetype="Preferred" >
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="pixmap" >
+        <pixmap resource="../QtMPC_kde.qrc" >:/images/icon.svg</pixmap>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_5" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Maximum" hsizetype="Preferred" >
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font" >
+        <font>
+         <pointsize>16</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text" >
+        <string>QtMPC Configuration</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabs" >
+     <property name="currentIndex" >
+      <number>1</number>
+     </property>
+     <widget class="QWidget" name="tab" >
+      <attribute name="title" >
+       <string>General</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout" >
+       <item row="0" column="0" >
+        <layout class="QFormLayout" name="formLayout" >
+         <item row="1" column="0" >
+          <widget class="QLabel" name="label" >
+           <property name="text" >
+            <string>MPD host:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" >
+          <widget class="QLabel" name="label_2" >
+           <property name="text" >
+            <string>MPD port:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" >
+          <widget class="QLabel" name="label_3" >
+           <property name="text" >
+            <string>Password:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0" >
+          <widget class="QLabel" name="label_6" >
+           <property name="text" >
+            <string>Crossfading (seconds)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0" >
+          <widget class="QLabel" name="label_7" >
+           <property name="text" >
+            <string>Update Interval (miliseconds)</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1" >
+          <widget class="QCheckBox" name="systemTrayCheckBox" >
+           <property name="enabled" >
+            <bool>true</bool>
+           </property>
+           <property name="text" >
+            <string>Show in System tray</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0" >
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>271</width>
+             <height>24</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="8" column="1" >
+          <widget class="QCheckBox" name="systemTrayPopup" >
+           <property name="text" >
+            <string>Show Popup message</string>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0" >
+          <spacer>
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>271</width>
+             <height>24</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="1" >
+          <widget class="KLineEdit" name="hostLineEdit" />
+         </item>
+         <item row="2" column="1" >
+          <widget class="KIntSpinBox" name="portSpinBox" >
+           <property name="minimum" >
+            <number>1</number>
+           </property>
+           <property name="maximum" >
+            <number>66000</number>
+           </property>
+           <property name="value" >
+            <number>6600</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" >
+          <widget class="KLineEdit" name="passwordLineEdit" />
+         </item>
+         <item row="4" column="1" >
+          <widget class="KIntSpinBox" name="crossfading" >
+           <property name="maximum" >
+            <number>20</number>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1" >
+          <widget class="KIntSpinBox" name="updateInterval" >
+           <property name="minimum" >
+            <number>100</number>
+           </property>
+           <property name="maximum" >
+            <number>4000</number>
+           </property>
+           <property name="value" >
+            <number>1000</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_2" >
+      <attribute name="title" >
+       <string>LastFM</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout_2" >
+       <item row="0" column="0" >
+        <widget class="QCheckBox" name="lastFmCheckBox" >
+         <property name="text" >
+          <string>Enable lastFM</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" >
+        <widget class="QLabel" name="label_18" >
+         <property name="text" >
+          <string>Username:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" >
+        <widget class="QLineEdit" name="lastFmUserName" />
+       </item>
+       <item row="2" column="0" >
+        <widget class="QLabel" name="label_19" >
+         <property name="text" >
+          <string>Password:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" >
+        <widget class="QLineEdit" name="lastFmPassword" >
+         <property name="echoMode" >
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <spacer name="verticalSpacer" >
+     <property name="orientation" >
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0" >
+      <size>
+       <width>20</width>
+       <height>18</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>KIntSpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>knuminput.h</header>
+  </customwidget>
+  <customwidget>
+   <class>KLineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>klineedit.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="../QtMPC_kde.qrc" />
+ </resources>
+ <connections>
+  <connection>
+   <sender>systemTrayCheckBox</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>systemTrayPopup</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>445</x>
+     <y>336</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>445</x>
+     <y>368</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lastFmCheckBox</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>lastFmPassword</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>69</x>
+     <y>185</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>367</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lastFmCheckBox</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>lastFmUserName</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>69</x>
+     <y>185</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>367</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

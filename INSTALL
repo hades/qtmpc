@@ -1,0 +1,32 @@
+Windows
+-------------------
+Simply run:
+
+- qmake
+- make release
+- release/QtMPC.exe
+
+Linux
+-------------------
+For KDE users:
+
+- "cd" to QtMPC directory
+- mkdir build
+- cd build
+- cmake .. -DCMAKE_INSTALL_PREFIX=/usr  # NOTE: "/usr" can be something different on your system
+- make
+- make install
+
+For non-KDE users:
+
+- "cd" to QtMPC directory
+- qmake
+- make
+- ./QtMPC   # NOTE: You can put the binary in /usr/local/bin for example
+
+NOTE: If you have KDE on your system but want to forcefully disable support for it,
+      you can add "-DWANT_KDE_SUPPORT=NO" to the cmake line
+
+NOTE 2: If you're not using KDE but have cmake installed, you can follow the cmake
+        procedure as well. "make install" just won't work.
+

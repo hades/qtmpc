@@ -1,0 +1,39 @@
+SVN:
+fixed:
+* a file name containing a " character would make it impossible to add it to the play list
+* fix a segfault when adding a selection containing one or more artists to the playlist
+* Now only items displayed in the library can be added to the playlist (usefull when searching)
+* Fixed the restoring of the playlist
+* Check for duplicates when adding from the DirView
+* Re-search when chaning album/artist etc
+new:
+* separate connection for database commands
+* variable update interval for stats/status
+* Dir view (ticket #36)
+* Disc number support
+  - Visible in playlist
+  - Sort Musiclibrary tracks not only by track number but also by disc number
+* Better memory usage for musiclibrary and dirview
+* Use libmaia (xml-rpc)
+* Use last.fm for album covers instead of amazon
+* last.fm scrobbling support
+  - Follow last.fm guide lines
+	- scrobbling is own thread so the rest of the program had nothing to do with
+		it.
+* synchttp for synchornous http support
+* show album release date
+
+0.4.1:
+new:
+* Playlist stats use QSet instead of QList
+* mpdstat converted to a singleton
+* mpdstatus converted to a singleton
+* only load QSettings when needed
+* GUI tweaks
+* search direct trough playlist
+* display playlist stats also in stats window
+
+fixed:
+* some valgrind warnings
+* reset position of slider to 00:00
+* add playlist item in the order they are in the music lib

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE kpartgui SYSTEM "kpartgui.dtd">
+<gui name="QtMPC" version="1">
+  <MenuBar>
+  	<Menu name="actions">
+		<text>Actions</text>
+		<Action name="updatedatabase" />
+		<Action name="showstatistics" />
+	</Menu>
+  </MenuBar>
+</gui>
