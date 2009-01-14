@@ -451,7 +451,6 @@ void LastFmScrobbler::checkForSubmission()
 	QMutexLocker locker(&songs_lock);
 
 	if (current_song.length == 0) {
-		qWarning() << "no song length";
 		return;
 	}
 
