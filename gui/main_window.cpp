@@ -429,7 +429,6 @@ void MainWindow::searchMusicLibrary()
 
 void MainWindow::updateCurrentSong(const Song *song)
 {
-	qWarning() << "Song update at" << QString::number(QDateTime::currentDateTime().toTime_t());
 	QSettings settings;
 
 	// Determine if album cover should be updated
