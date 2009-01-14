@@ -310,7 +310,12 @@ void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, q
 	QString path = "/" + lines.at(2);
 	QBuffer output;
 
-	if (!http.syncPost(path, &buffer, &output)) {
+	QHttpRequestHeader header("POST", path);
+	header.setValue("content-type", "application/x-www-form-urlencoded");
+	header.setValue("User-Agent", "QtMPC(svn)");
+	header.setValue("Host", host.at(0));
+	
+	if (!http.syncRequest(header, &buffer, &output)) {
 		//TODO: BETTER
 		qWarning() << "HTTP ERROR";
 	}
