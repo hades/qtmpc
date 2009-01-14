@@ -522,7 +522,7 @@ void MainWindow::updateStatus()
 				|| status->state() == MPDStatus::State_Inactive) {
 			positionSlider->setValue(0);
 		} else {
-			positionSlider->setMaximum(status->timeTotal());
+			positionSlider->setRange(0, status->timeTotal());
 			positionSlider->setValue(status->timeElapsed());
 		}
 	}

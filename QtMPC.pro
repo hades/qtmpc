@@ -5,7 +5,7 @@ INCLUDEPATH += . lib ./external/libmaia/
 CONFIG += qt
 QT += network xml
 RESOURCES = QtMPC.qrc
-DEFINES += QT_NO_DEBUG_OUTPUT
+#DEFINES += QT_NO_DEBUG_OUTPUT
 
 # Input
 HEADERS += external/libmaia/maiaObject.h \

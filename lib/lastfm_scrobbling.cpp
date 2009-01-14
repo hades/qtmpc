@@ -277,6 +277,8 @@ bool LastFmScrobbler::handShake()
  */
 void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, quint32 track, quint32 length)
 {
+	checkForSubmission();
+
 	//First add the song
 	current_song.artist = QUrl::toPercentEncoding(artist.toUtf8());
 	current_song.title = QUrl::toPercentEncoding(title.toUtf8());
@@ -285,54 +287,61 @@ void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, q
 	current_song.track = track;
 	current_song.current_time = QString::number(QDateTime::currentDateTime().toTime_t());
 
-	//Try to add to nowPlaying
-	if (nowPlayingURL == "") {
-		if (!handShake()) {
-			return;
+	while(true) {
+		//Try to add to nowPlaying
+		if (nowPlayingURL == "") {
+			if (!handShake()) {
+				return;
+			}
 		}
-	}
 
-	QMap<QString, QString> args;
-	args["s"] = sessionID;
-	args["a"] = current_song.artist;
-	args["t"] = current_song.title;
-	args["b"] = current_song.album;
-	args["i"] = QString::number(current_song.length);
-	args["n"] = QString::number(current_song.track);
-	
-	QBuffer buffer;
-	buffer.setData(generateURL(args).toUtf8());
+		QMap<QString, QString> args;
+		args["s"] = sessionID;
+		args["a"] = current_song.artist;
+		args["t"] = current_song.title;
+		args["b"] = current_song.album;
+		args["i"] = QString::number(current_song.length);
+		args["n"] = QString::number(current_song.track);
 
-	QStringList lines = nowPlayingURL.split("/", QString::SkipEmptyParts);
-	QStringList host = lines.at(1).split(":", QString::SkipEmptyParts);
-	http.setHost(host.at(0), host.at(1).toInt());
+		QBuffer buffer;
+		buffer.setData(generateURL(args).toUtf8());
 
-	QString path = "/" + lines.at(2);
-	QBuffer output;
+		QStringList lines = nowPlayingURL.split("/", QString::SkipEmptyParts);
+		QStringList host = lines.at(1).split(":", QString::SkipEmptyParts);
+		http.setHost(host.at(0), host.at(1).toInt());
 
-	QHttpRequestHeader header("POST", path);
-	header.setValue("content-type", "application/x-www-form-urlencoded");
-	header.setValue("User-Agent", "QtMPC(svn)");
-	header.setValue("Host", host.at(0));
-	
-	if (!http.syncRequest(header, &buffer, &output)) {
-		//TODO: BETTER
-		qWarning() << "HTTP ERROR";
-	}
+		QString path = "/" + lines.at(2);
+		QBuffer output;
 
-	QString data(output.data());
-	QStringList output_lines = data.split("\n", QString::SkipEmptyParts);
+		QHttpRequestHeader header("POST", path);
+		header.setValue("content-type", "application/x-www-form-urlencoded");
+		header.setValue("User-Agent", "QtMPC(svn)");
+		header.setValue("Host", host.at(0));
 
-	/*
-	 * We can get a OK or a BADSESSION.
-	 * On BADSESSION do a new handshake and resend.
-	 *
-	 * TODO: Do this more neat
-	 */
-	if (output_lines.at(0) == "BADSESSION") {
-		qWarning() << "BADSESSION";
-		handShake();
-		nowPlaying(artist, album, title, track, length);
+		if (!http.syncRequest(header, &buffer, &output)) {
+			qDebug() << "Http Error";
+			if (!handShake())
+				break;
+			continue;
+		}
+		qWarning() << "Now Playing Submitted";
+
+		QString data(output.data());
+		QStringList output_lines = data.split("\n", QString::SkipEmptyParts);
+
+		/*
+		* We can get a OK or a BADSESSION.
+		* On BADSESSION do a new handshake and resend.
+		*
+		* TODO: Do this more neat
+		*/
+		if (output_lines.at(0) == "BADSESSION") {
+			qDebug() << "BADSESSION resend";
+			if (!handShake())
+				break;
+		} else if (output_lines.at(0) == "OK") {
+			break;
+		}
 	}
 }
 
@@ -431,7 +440,6 @@ void LastFmScrobbler::resumeScrobblerTimer()
  */
 void LastFmScrobbler::startScrobbleTimer()
 {
-	checkForSubmission();
 	QMutexLocker locker(&songs_lock);
 	timePlayed = 0;
 	startPlayingDateTime = QDateTime::currentDateTime();
