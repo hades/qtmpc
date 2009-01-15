@@ -39,6 +39,7 @@ class LastFmScrobbler : public QThread
 	public:
 		LastFmScrobbler(QObject *parent = 0);
 		~LastFmScrobbler();
+		void setCurrentTrack(QString artist, QString album, QString title, quint32 track, quint32 length);
 
 #if QT_VERSION < 0x040400
 		void run();
@@ -50,8 +51,7 @@ class LastFmScrobbler : public QThread
 		void pauseScrobblerTimer();
 		void resumeScrobblerTimer();
 		void stopScrobblerTimer();
-		void nowPlaying(QString artist, QString album, QString title, quint32 track, quint32 length);
-		void checkForSubmission();
+		void nowPlaying();
 
 	signals:
 		void authFailed(const int);

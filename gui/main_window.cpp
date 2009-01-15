@@ -76,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 		lastState(MPDStatus::State_Inactive),
 		lastSongId(-1),
 		fetchStatsFactor(0),
+		nowPlayingFactor(0),
 		draggingPositionSlider(false),
 		icon(QIcon(":/images/icon.svg"))
 {
@@ -260,8 +261,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 	connect(this, SIGNAL(startSong()), &scrobbler, SLOT(startScrobbleTimer()));
 	connect(this, SIGNAL(pauseSong()), &scrobbler, SLOT(pauseScrobblerTimer()));
 	connect(this, SIGNAL(resumeSong()), &scrobbler, SLOT(resumeScrobblerTimer()));
-	connect(this, SIGNAL(nowPlaying(QString, QString, QString, quint32, quint32)),
-					 &scrobbler, SLOT(nowPlaying(QString, QString, QString, quint32, quint32)));
+	connect(this, SIGNAL(nowPlaying()), &scrobbler, SLOT(nowPlaying()));
 
 	splitter->restoreState(settings.value("splitterSizes").toByteArray());
 
@@ -483,8 +483,8 @@ void MainWindow::updateCurrentSong(const Song *song)
 	toolTipText += "album:  " + song->album + "\n";
 
 	if (settings.value("lastfm/enabled", "false").toBool()) {
-		emit nowPlaying(song->artist, song->album, song->title, song->track, song->time);
-		emit startSong();
+		scrobbler.setCurrentTrack(song->artist, song->album, song->title, song->track, song->time);
+		emit nowPlaying();
 	}
 
 	delete song;
@@ -609,15 +609,21 @@ void MainWindow::updateStatus()
 	/* Update scrobbler stuff */
 	if (settings.value("lastfm/enabled", "false").toBool()) {
 		if (lastState == MPDStatus::State_Playing &&
-			status->state() == MPDStatus::State_Paused)
+			status->state() == MPDStatus::State_Paused) {
 			emit pauseSong();
-		else if (lastState == MPDStatus::State_Paused &&
-			status->state() == MPDStatus::State_Playing)
+		} else if (lastState == MPDStatus::State_Paused &&
+			status->state() == MPDStatus::State_Playing) {
 			emit resumeSong();
-		else if (lastState != MPDStatus::State_Stopped &&
+			emit nowPlaying();
+		} else if (lastState != MPDStatus::State_Stopped &&
 			status->state() == MPDStatus::State_Stopped){
 			emit stopSong();
-			//emit submitSong();
+		}
+
+		if (status->state() == MPDStatus::State_Playing) {
+			nowPlayingFactor = (nowPlayingFactor + 1) % 20;
+			if (nowPlayingFactor == 0)
+				emit nowPlaying();
 		}
 	}
 

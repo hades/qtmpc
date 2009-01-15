@@ -271,15 +271,17 @@ bool LastFmScrobbler::handShake()
 	return true;
 }
 
-/**
- * Submit now playing to last.fm
- * see: http://www.last.fm/api/submissions#np
- */
-void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, quint32 track, quint32 length)
+void LastFmScrobbler::setCurrentTrack(QString artist, QString album, QString title, quint32 track, quint32 length)
 {
-	checkForSubmission();
+	QMutexLocker locker(&songs_lock);
+	if (startPlayingDateTime.isValid()) {
+		timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
 
-	//First add the song
+		if (current_song.length > 30 && (timePlayed > 240 || timePlayed > current_song.length/2)) {
+			songs.append(current_song);
+		} 
+	}
+	
 	current_song.artist = QUrl::toPercentEncoding(artist.toUtf8());
 	current_song.title = QUrl::toPercentEncoding(title.toUtf8());
 	current_song.album = QUrl::toPercentEncoding(album.toUtf8());
@@ -287,6 +289,19 @@ void LastFmScrobbler::nowPlaying(QString artist, QString album, QString title, q
 	current_song.track = track;
 	current_song.current_time = QString::number(QDateTime::currentDateTime().toTime_t());
 
+	locker.unlock();
+	startScrobbleTimer();
+	submission();
+}
+
+/**
+ * Submit now playing to last.fm
+ * see: http://www.last.fm/api/submissions#np
+ */
+void LastFmScrobbler::nowPlaying()
+{
+	QMutexLocker locker(&songs_lock);
+	//First add the song
 	while(true) {
 		//Try to add to nowPlaying
 		if (nowPlayingURL == "") {
@@ -355,6 +370,7 @@ void LastFmScrobbler::submission()
 			return;
 	}
 
+	QMutexLocker locker(&songs_lock);
 	while (songs.size() > 0) {
 		QString args = "";
 		args += "s=" + sessionID;
@@ -423,6 +439,7 @@ void LastFmScrobbler::pauseScrobblerTimer()
 {
 	QMutexLocker locker(&songs_lock);
 	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
+	startPlayingDateTime = QDateTime();
 }
 
 /**
@@ -446,32 +463,24 @@ void LastFmScrobbler::startScrobbleTimer()
 
 void LastFmScrobbler::stopScrobblerTimer()
 {
-	checkForSubmission();
 	QMutexLocker locker(&songs_lock);
 	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
-	startPlayingDateTime = QDateTime::currentDateTime();
-
-	timePlayed = 0;
-}
-
-/**
- * Check if we comply to submission demands
- * see: http://www.last.fm/api/submissions#3.1
- */
-void LastFmScrobbler::checkForSubmission()
-{
-	QMutexLocker locker(&songs_lock);
-
-	if (current_song.length == 0) {
-		return;
-	}
-
-	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
+	startPlayingDateTime = QDateTime();
 
 	if (timePlayed > 240 || timePlayed > current_song.length/2) {
 		songs.append(current_song);
-		submission();
 	}
+
+	timePlayed = 0;
+	current_song.artist = "";
+	current_song.title = "";
+	current_song.album = "";
+	current_song.length = 0;
+	current_song.track = 0;
+	current_song.current_time = "";
+
+	locker.unlock();
+	submission();
 }
 
 void LastFmScrobbler::clearAuth(bool enabled)

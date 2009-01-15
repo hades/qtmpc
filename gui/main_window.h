@@ -89,6 +89,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		quint32 lastPlaylist;
 		QDateTime lastDbUpdate;
 		int fetchStatsFactor;
+		int nowPlayingFactor;
 		QTimer statusTimer;
 		PlaylistTableModel playlistModel;
 		dirViewModel dirviewModel;
@@ -189,7 +190,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		void stopSong();
 		void pauseSong();
 		void resumeSong();
-		void nowPlaying(QString artist, QString album, QString title, quint32 track, quint32 length);
+		void nowPlaying();
 };
 
 #endif
