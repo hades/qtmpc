@@ -32,11 +32,11 @@
 int main(int argc, char *argv[])
 {
 #ifdef ENABLE_KDE_SUPPORT
-	KAboutData aboutData( PACKAGE_NAME, 0,
-		ki18n(PACKAGE_NAME), PACKAGE_VERSION,
+	KAboutData aboutData( qPrintable(PACKAGE_NAME), 0,
+		ki18n(qPrintable(PACKAGE_NAME)), qPrintable(PACKAGE_VERSION),
 		ki18n("A Qt interface to MPD"),
 		KAboutData::License_GPL_V2,
-		ki18n("Copyright (C) 2007-2008  The QtMPC Authors"),
+		ki18n("Copyright (C) 2007-2009  The QtMPC Authors"),
 		ki18n(""),
 		"http://qtmpc.lowblog.nl/",
 		""
