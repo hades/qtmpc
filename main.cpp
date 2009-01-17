@@ -26,13 +26,14 @@
 #include <QApplication>
 #endif
 
+#include "QtMPC_config.h"
 #include "gui/main_window.h"
 
 int main(int argc, char *argv[])
 {
 #ifdef ENABLE_KDE_SUPPORT
-	KAboutData aboutData( "QtMPC", 0,
-		ki18n("QtMPC"), "-SVN-",
+	KAboutData aboutData( PACKAGE_NAME, 0,
+		ki18n(PACKAGE_NAME), PACKAGE_VERSION,
 		ki18n("A Qt interface to MPD"),
 		KAboutData::License_GPL_V2,
 		ki18n("Copyright (C) 2007-2008  The QtMPC Authors"),
@@ -49,7 +50,7 @@ int main(int argc, char *argv[])
 	KApplication app;
 #else
 	QApplication app(argc, argv);
-	QApplication::setApplicationName("qtmpc");
+	QApplication::setApplicationName(PACKAGE_NAME);
 	QApplication::setOrganizationName("lowblogprojects");
 #endif
 

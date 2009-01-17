@@ -18,9 +18,11 @@
  * along with QtMPC.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "QtMPC_config.h"
 #include "about_dialog.h"
 
 AboutDialog::AboutDialog(QWidget *parent, Qt::WindowFlags f) : QDialog(parent, f)
 {
 	setupUi(this);
+	titleLabel->setText(PACKAGE_STRING);
 }

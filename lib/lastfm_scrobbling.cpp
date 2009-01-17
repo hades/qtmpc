@@ -35,6 +35,7 @@
 #include <QMutexLocker>
 #include <QMutex>
 
+#include "QtMPC_config.h"
 #include "lastfm_scrobbling.h"
 
 #include <QDebug>
@@ -227,7 +228,7 @@ bool LastFmScrobbler::handShake()
 	args["hs"] = "true";
 	args["p"] = "1.2.1";
 	args["c"] = "qtm";
-	args["v"] = "0.4.1-svn";
+	args["v"] = PACKAGE_VERSION;
 	args["u"] = username;
 	args["t"] = timestamp;
 	args["a"] = generateAuthTokenHandShake(secret_key, timestamp);
@@ -401,7 +402,7 @@ void LastFmScrobbler::submission()
 
 		QHttpRequestHeader header("POST", path);
 		header.setValue("content-type", "application/x-www-form-urlencoded");
-		header.setValue("User-Agent", "QtMPC(svn)");
+		header.setValue("User-Agent", PACKAGE_STRING);
 		header.setValue("Host", host.at(0));
 
 		QBuffer output;

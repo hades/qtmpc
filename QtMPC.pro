@@ -37,7 +37,8 @@ HEADERS += external/libmaia/maiaObject.h \
 		lib/mpdstats.h \
 		lib/mpdstatus.h \
 		lib/song.h \
-		external/synchttp/synchttp.h
+		external/synchttp/synchttp.h \
+		QtMPC_config.h
 
 FORMS += gui/main_window.ui \
 		gui/about_dialog.ui \
