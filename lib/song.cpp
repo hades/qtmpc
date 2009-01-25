@@ -22,11 +22,45 @@
 #include "song.h"
 
 Song::Song()
-	: id(-1),
-	time(0),
-	track(0),
-	pos(0),
-	disc(0)
+	: QObject(),
+	  id(-1),
+	  time(0),
+	  track(0),
+	  pos(0),
+	  disc(0)
+{
+}
+
+Song::Song(const Song &s)
+	: QObject(),
+	  id(s.id),
+	  file(s.file),
+	  time(s.time),
+	  album(s.album),
+	  artist(s.artist),
+	  title(s.title),
+	  track(s.track),
+	  pos(s.pos),
+	  disc(s.disc)
+{
+}
+
+Song& Song::operator=(const Song &s)
+{
+	id = s.id;
+	file = s.file;
+	time = s.time;
+	album = s.album;
+	artist = s.artist;
+	title = s.title;
+	track = s.track;
+	pos = s.pos;
+	disc = s.disc;
+
+	return *this;
+}
+
+Song::~Song()
 {
 }
 
@@ -51,6 +85,19 @@ void Song::fillEmptyFields()
 		title = "<Unknown>";
 }
 
+void Song::clear()
+{
+	id = -1;
+	file.clear();
+	time = 0;
+	album.clear();
+	artist.clear();
+	title.clear();
+	track = 0;
+	pos = 0;
+	disc = 0;
+}
+
 QString Song::formattedTime(const quint32 &seconds)
 {
 	QString result;
@@ -62,4 +109,18 @@ QString Song::formattedTime(const quint32 &seconds)
 	result += QString::number(seconds % 60);
 
 	return result;
+}
+
+ScrobblingSong::ScrobblingSong() : Song()
+{
+}
+
+ScrobblingSong::ScrobblingSong(const ScrobblingSong &s) : Song(s), timePlayedAt(s.timePlayedAt)
+{
+}
+
+void ScrobblingSong::clear()
+{
+	Song::clear();
+	timePlayedAt.clear();
 }

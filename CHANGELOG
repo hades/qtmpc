@@ -1,5 +1,10 @@
 SVN:
 fixed:
+
+new:
+
+0.5.0:
+fixed:
 * a file name containing a " character would make it impossible to add it to the play list
 * fix a segfault when adding a selection containing one or more artists to the playlist
 * Now only items displayed in the library can be added to the playlist (usefull when searching)

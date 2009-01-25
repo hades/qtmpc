@@ -42,16 +42,15 @@
 
 LastFmScrobbler::LastFmScrobbler(QObject *parent)
 	: QThread(parent),
-		startPlayingDateTime(QDateTime::currentDateTime()),
-		timePlayed(0),
-		enabled(false),
-		failures(0),
+		m_startPlayingDateTime(QDateTime::currentDateTime()),
+		m_timePlayed(0),
+		m_enabled(false),
+		m_failures(0),
 		hs_failed(false),
 		hs_timestamp(0),
-		api_key("11172d35eb8cc2fd33250a9e45a2d486"),
-		secret_key("f551359ab7f6d759eb1880f554e5e815")
+		m_api_key("11172d35eb8cc2fd33250a9e45a2d486"),
+		m_secret_key("f551359ab7f6d759eb1880f554e5e815")
 {
-	current_song.length = 0;
 	fromXML();
 }
 
@@ -62,7 +61,7 @@ LastFmScrobbler::~LastFmScrobbler()
 {
 	toXML();
 	quit();
-	
+
 	while(isRunning())
 		msleep(100);
 }
@@ -88,7 +87,7 @@ QString LastFmScrobbler::apiSig(QMap<QString, QString> args)
 		string += i.key();
 		string += i.value();
 	}
-	string += secret_key;
+	string += m_secret_key;
 
 	return QCryptographicHash::hash(string.toUtf8(), QCryptographicHash::Md5).toHex();
 }
@@ -120,10 +119,8 @@ QString LastFmScrobbler::generateAuthToken()
  */
 QString LastFmScrobbler::generateAuthTokenHandShake(QString secret, QString timestamp)
 {
-	QString hash = secret + timestamp;
-	hash = QCryptographicHash::hash(hash.toUtf8(), QCryptographicHash::Md5).toHex();
-
-	return hash;
+	return QString(QCryptographicHash::hash(secret.toUtf8() + timestamp.toUtf8(),
+	                                        QCryptographicHash::Md5).toHex());
 }
 
 /**
@@ -132,7 +129,7 @@ QString LastFmScrobbler::generateAuthTokenHandShake(QString secret, QString time
 QString LastFmScrobbler::generateURL(QMap<QString, QString> args)
 {
 	QMapIterator<QString, QString> i(args);
-	QString url = "";
+	QString url;
 
 	while(i.hasNext()) {
 		i.next();
@@ -152,25 +149,25 @@ QString LastFmScrobbler::generateURL(QMap<QString, QString> args)
 bool LastFmScrobbler::getSessionKey()
 {
 	QSettings settings;
-	http.setHost("ws.audioscrobbler.com");
+	m_http.setHost("ws.audioscrobbler.com");
 
 	QString start_path = "/2.0/?";
 
 	QMap<QString, QString> args;
 	args["method"] = "auth.getmobilesession";
-	args["api_key"] = api_key;
+	args["api_key"] = m_api_key;
 	args["authToken"] = generateAuthToken();
 	args["username"] = settings.value("lastfm/username", "").toString();
 	args["api_sig"] = apiSig(args);
 
 	QString path = generateURL(args);
 	QBuffer output;
-	http.syncGet(start_path+path, &output);
+	m_http.syncGet(start_path+path, &output);
 
 	QString session(output.data());
 	QXmlStreamReader doc(session);
 	bool fault = true;
-	QString key = "";
+	QString key;
 	while(!doc.atEnd()) {
 		doc.readNext();
 		if(doc.isStartElement() && doc.name() == "lfm") {
@@ -185,7 +182,7 @@ bool LastFmScrobbler::getSessionKey()
 			key = doc.readElementText();
 		}
 	}
-	if (key != "") {
+	if (!key.isEmpty()) {
 		settings.setValue("lastfm/key", key);
 		return true;
 	}
@@ -211,13 +208,13 @@ bool LastFmScrobbler::handShake()
 	}
 
 	QSettings settings;
-	if (settings.value("lastfm/key", "").toString() == "") {
+	if (settings.value("lastfm/key", "").toString().isEmpty()) {
 		if (!getSessionKey()) {
 			return false;
 		}
 	}
 
-	http.setHost("post.audioscrobbler.com");
+	m_http.setHost("post.audioscrobbler.com");
 	QMap<QString, QString> args;
 	uint time = QDateTime::currentDateTime().toTime_t();
 	QString timestamp = QString::number(time);
@@ -231,14 +228,14 @@ bool LastFmScrobbler::handShake()
 	args["v"] = PACKAGE_VERSION;
 	args["u"] = username;
 	args["t"] = timestamp;
-	args["a"] = generateAuthTokenHandShake(secret_key, timestamp);
-	args["api_key"] = api_key;
+	args["a"] = generateAuthTokenHandShake(m_secret_key, timestamp);
+	args["api_key"] = m_api_key;
 	args["sk"] = settings.value("lastfm/key", "").toString();
 
 	QString path = "/?" + generateURL(args);
 
 	QBuffer output;
-	if (!http.syncGet(path, &output)) {
+	if (!m_http.syncGet(path, &output)) {
 		hs_failed = true;
 		hs_failures++;
 		hs_timestamp = QDateTime::currentDateTime().toTime_t();
@@ -264,9 +261,9 @@ bool LastFmScrobbler::handShake()
 		return false;
 	}
 
-	sessionID = lines.at(1);
-	nowPlayingURL = lines.at(2);
-	submissionURL = lines.at(3);
+	m_sessionID = lines.at(1);
+	m_nowPlayingURL = lines.at(2);
+	m_submissionURL = lines.at(3);
 	hs_failed = false;
 	hs_failures = 0;
 	return true;
@@ -274,21 +271,22 @@ bool LastFmScrobbler::handShake()
 
 void LastFmScrobbler::setCurrentTrack(QString artist, QString album, QString title, quint32 track, quint32 length)
 {
-	QMutexLocker locker(&songs_lock);
-	if (startPlayingDateTime.isValid()) {
-		timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
+	QMutexLocker locker(&m_songsMutex);
+	if (m_startPlayingDateTime.isValid()) {
+		m_timePlayed = m_timePlayed + (QDateTime::currentDateTime().toTime_t()
+		                - m_startPlayingDateTime.toTime_t());
 
-		if (current_song.length > 30 && (timePlayed > 240 || timePlayed > current_song.length/2)) {
-			songs.append(current_song);
-		} 
+		if (m_currentSong.time > 30 && (m_timePlayed > 240 || m_timePlayed > m_currentSong.time / 2)) {
+			m_songs.append(m_currentSong);
+		}
 	}
-	
-	current_song.artist = QUrl::toPercentEncoding(artist.toUtf8());
-	current_song.title = QUrl::toPercentEncoding(title.toUtf8());
-	current_song.album = QUrl::toPercentEncoding(album.toUtf8());
-	current_song.length = length;
-	current_song.track = track;
-	current_song.current_time = QString::number(QDateTime::currentDateTime().toTime_t());
+
+	m_currentSong.artist = QUrl::toPercentEncoding(artist.toUtf8());
+	m_currentSong.title = QUrl::toPercentEncoding(title.toUtf8());
+	m_currentSong.album = QUrl::toPercentEncoding(album.toUtf8());
+	m_currentSong.time = length;
+	m_currentSong.track = track;
+	m_currentSong.timePlayedAt = QString::number(QDateTime::currentDateTime().toTime_t());
 
 	locker.unlock();
 	startScrobbleTimer();
@@ -301,30 +299,30 @@ void LastFmScrobbler::setCurrentTrack(QString artist, QString album, QString tit
  */
 void LastFmScrobbler::nowPlaying()
 {
-	QMutexLocker locker(&songs_lock);
+	QMutexLocker locker(&m_songsMutex);
 	//First add the song
 	while(true) {
 		//Try to add to nowPlaying
-		if (nowPlayingURL == "") {
+		if (m_nowPlayingURL.isEmpty()) {
 			if (!handShake()) {
 				return;
 			}
 		}
 
 		QMap<QString, QString> args;
-		args["s"] = sessionID;
-		args["a"] = current_song.artist;
-		args["t"] = current_song.title;
-		args["b"] = current_song.album;
-		args["i"] = QString::number(current_song.length);
-		args["n"] = QString::number(current_song.track);
+		args["s"] = m_sessionID;
+		args["a"] = m_currentSong.artist;
+		args["t"] = m_currentSong.title;
+		args["b"] = m_currentSong.album;
+		args["i"] = QString::number(m_currentSong.time);
+		args["n"] = QString::number(m_currentSong.track);
 
 		QBuffer buffer;
 		buffer.setData(generateURL(args).toUtf8());
 
-		QStringList lines = nowPlayingURL.split("/", QString::SkipEmptyParts);
+		QStringList lines = m_nowPlayingURL.split("/", QString::SkipEmptyParts);
 		QStringList host = lines.at(1).split(":", QString::SkipEmptyParts);
-		http.setHost(host.at(0), host.at(1).toInt());
+		m_http.setHost(host.at(0), host.at(1).toInt());
 
 		QString path = "/" + lines.at(2);
 		QBuffer output;
@@ -334,7 +332,7 @@ void LastFmScrobbler::nowPlaying()
 		header.setValue("User-Agent", "QtMPC(svn)");
 		header.setValue("Host", host.at(0));
 
-		if (!http.syncRequest(header, &buffer, &output)) {
+		if (!m_http.syncRequest(header, &buffer, &output)) {
 			qDebug() << "Http Error";
 			if (!handShake())
 				break;
@@ -366,25 +364,24 @@ void LastFmScrobbler::nowPlaying()
  */
 void LastFmScrobbler::submission()
 {
-	if (submissionURL == "") {
+	if (m_submissionURL.isEmpty()) {
 		if (!handShake())
 			return;
 	}
 
-	QMutexLocker locker(&songs_lock);
-	while (songs.size() > 0) {
-		QString args = "";
-		args += "s=" + sessionID;
+	QMutexLocker locker(&m_songsMutex);
+	while (m_songs.size() > 0) {
+		QString args = "s=" + m_sessionID;
 
-		int size = songs.size() > 50 ? 50 : songs.size();
+		int size = m_songs.size() > 50 ? 50 : m_songs.size();
 		for (int i = 0; i < size; i++) {
-			song s = songs.at(i);
+			ScrobblingSong s = m_songs.at(i);
 			QString num = QString::number(i);
 			args += "&a[" + num + "]=" + s.artist;
 			args += "&t[" + num + "]=" + s.title;
 			args += "&b[" + num + "]=" + s.album;
-			args += "&i[" + num + "]=" + s.current_time;
-			args += "&l[" + num + "]=" + QString::number(s.length);
+			args += "&i[" + num + "]=" + s.timePlayedAt;
+			args += "&l[" + num + "]=" + QString::number(s.time);
 			args += "&n[" + num + "]=" + QString::number(s.track);
 			args += "&o[" + num + "]=P";
 			args += "&r[" + num + "]=";
@@ -394,9 +391,9 @@ void LastFmScrobbler::submission()
 		QBuffer buffer;
 		buffer.setData(args.toUtf8());
 
-		QStringList lines = submissionURL.split("/", QString::SkipEmptyParts);
+		QStringList lines = m_submissionURL.split("/", QString::SkipEmptyParts);
 		QStringList host = lines.at(1).split(":", QString::SkipEmptyParts);
-		http.setHost(host.at(0), host.at(1).toInt());
+		m_http.setHost(host.at(0), host.at(1).toInt());
 
 		QString path = "/" + lines.at(2);
 
@@ -406,11 +403,11 @@ void LastFmScrobbler::submission()
 		header.setValue("Host", host.at(0));
 
 		QBuffer output;
-		if (!http.syncRequest(header, &buffer, &output)) {
-			failures++;
-			if (failures > 2)
+		if (!m_http.syncRequest(header, &buffer, &output)) {
+			m_failures++;
+			if (m_failures > 2)
 				handShake();
-			failures = 0;
+			m_failures = 0;
 			return;
 		}
 
@@ -419,15 +416,15 @@ void LastFmScrobbler::submission()
 
 		if (output_lines.at(0) == "OK") {
 			for (int i = 0; i < size; i++) {
-				songs.pop_front();
+				m_songs.pop_front();
 			}
 		} else if (output_lines.at(0) == "BADSESSION") {
 			handShake();
 		} else {
-			failures++;
-			if (failures > 2)
+			m_failures++;
+			if (m_failures > 2)
 				handShake();
-			failures = 0;
+			m_failures = 0;
 			return;
 		}
 	}
@@ -438,9 +435,10 @@ void LastFmScrobbler::submission()
  */
 void LastFmScrobbler::pauseScrobblerTimer()
 {
-	QMutexLocker locker(&songs_lock);
-	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
-	startPlayingDateTime = QDateTime();
+	QMutexLocker locker(&m_songsMutex);
+	m_timePlayed = m_timePlayed + (QDateTime::currentDateTime().toTime_t()
+                    - m_startPlayingDateTime.toTime_t());
+	m_startPlayingDateTime = QDateTime();
 }
 
 /**
@@ -448,8 +446,8 @@ void LastFmScrobbler::pauseScrobblerTimer()
  */
 void LastFmScrobbler::resumeScrobblerTimer()
 {
-	QMutexLocker locker(&songs_lock);
-	startPlayingDateTime = QDateTime::currentDateTime();
+	QMutexLocker locker(&m_songsMutex);
+	m_startPlayingDateTime = QDateTime::currentDateTime();
 }
 
 /**
@@ -457,28 +455,24 @@ void LastFmScrobbler::resumeScrobblerTimer()
  */
 void LastFmScrobbler::startScrobbleTimer()
 {
-	QMutexLocker locker(&songs_lock);
-	timePlayed = 0;
-	startPlayingDateTime = QDateTime::currentDateTime();
+	QMutexLocker locker(&m_songsMutex);
+	m_timePlayed = 0;
+	m_startPlayingDateTime = QDateTime::currentDateTime();
 }
 
 void LastFmScrobbler::stopScrobblerTimer()
 {
-	QMutexLocker locker(&songs_lock);
-	timePlayed = timePlayed + (QDateTime::currentDateTime().toTime_t() - startPlayingDateTime.toTime_t());
-	startPlayingDateTime = QDateTime();
+	QMutexLocker locker(&m_songsMutex);
+	m_timePlayed = m_timePlayed + (QDateTime::currentDateTime().toTime_t()
+                    - m_startPlayingDateTime.toTime_t());
+	m_startPlayingDateTime = QDateTime();
 
-	if (timePlayed > 240 || timePlayed > current_song.length/2) {
-		songs.append(current_song);
+	if (m_timePlayed > 240 || m_timePlayed > m_currentSong.time / 2) {
+		m_songs.append(m_currentSong);
 	}
 
-	timePlayed = 0;
-	current_song.artist = "";
-	current_song.title = "";
-	current_song.album = "";
-	current_song.length = 0;
-	current_song.track = 0;
-	current_song.current_time = "";
+	m_timePlayed = 0;
+	m_currentSong.clear();
 
 	locker.unlock();
 	submission();
@@ -486,9 +480,9 @@ void LastFmScrobbler::stopScrobblerTimer()
 
 void LastFmScrobbler::clearAuth(bool enabled)
 {
-	sessionID = "";
-	nowPlayingURL = "";
-	submissionURL = "";
+	m_sessionID.clear();
+	m_nowPlayingURL.clear();
+	m_submissionURL.clear();
 	QSettings settings;
 	settings.setValue("lastfm/key", "");
 
@@ -525,15 +519,15 @@ void LastFmScrobbler::toXML()
 	writer.writeStartElement("qtmpc_lastfm");
 	writer.writeAttribute("version", "1");
 
-	for (int i = 0; i < songs.size(); i++) {
-		song s = songs.at(i);
+	for (int i = 0; i < m_songs.size(); i++) {
+		ScrobblingSong s = m_songs.at(i);
 		writer.writeEmptyElement("Song");
 		writer.writeAttribute("artist", s.artist);
 		writer.writeAttribute("album", s.album);
 		writer.writeAttribute("title", s.title);
 		writer.writeAttribute("track", QString::number(s.track));
-		writer.writeAttribute("length", QString::number(s.length));
-		writer.writeAttribute("current_time", s.current_time);
+		writer.writeAttribute("length", QString::number(s.time));
+		writer.writeAttribute("current_time", s.timePlayedAt);
 	}
 
 	writer.writeEndElement();
@@ -548,31 +542,31 @@ void LastFmScrobbler::fromXML()
 {
 	QString dir(QDir::toNativeSeparators(QDir::homePath()) + QDir::separator() + ".QtMPC" + QDir::separator());
 	QString filename(QFile::encodeName("lastfm.xml"));
-	
+
 	//Check if file exists
 	if (!QFile::exists(dir + filename))
 		return;
-	
+
 	QFile file(dir+filename);
 	file.open(QIODevice::ReadOnly);
 
 	QXmlStreamReader reader(&file);
 	while(!reader.atEnd()) {
 		reader.readNext();
-		if (reader.error()){
+		if (reader.error()) {
 			qDebug() << reader.errorString();
 		} else {
 			//Found Song... add it
 			if (reader.isStartElement() && reader.name().toString() == "Song") {
-				song s;
+				ScrobblingSong s;
 				s.artist = reader.attributes().value("artist").toString();
 				s.album = reader.attributes().value("album").toString();
 				s.title = reader.attributes().value("title").toString();
 				s.track = reader.attributes().value("track").toString().toUInt();
-				s.length = reader.attributes().value("length").toString().toUInt();
-				s.current_time = reader.attributes().value("current_time").toString();
+				s.time = reader.attributes().value("length").toString().toUInt();
+				s.timePlayedAt = reader.attributes().value("current_time").toString();
 
-				songs.append(s);
+				m_songs.append(s);
 			}
 		}
 	}

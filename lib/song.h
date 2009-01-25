@@ -22,10 +22,13 @@
 #define SONG_H
 
 #include <QtGlobal>
+#include <QObject>
 #include <QString>
 
-class Song
+class Song : public QObject
 {
+	Q_OBJECT
+
 	public:
 		qint32 id;
 		QString file;
@@ -38,9 +41,26 @@ class Song
 		quint32 disc;
 
 		Song();
+		Song(const Song &);
+		Song& operator=(const Song&);
+		virtual ~Song();
 		bool isEmpty() const;
 		void fillEmptyFields();
+		virtual void clear();
 		static QString formattedTime(const quint32 &seconds);
+};
+
+class ScrobblingSong : public Song
+{
+	Q_OBJECT
+
+	public:
+		QString timePlayedAt;
+
+		ScrobblingSong();
+		ScrobblingSong(const ScrobblingSong &);
+		ScrobblingSong& operator=(const ScrobblingSong&);
+		void clear();
 };
 
 #endif

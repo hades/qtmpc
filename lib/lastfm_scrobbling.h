@@ -31,6 +31,7 @@
 #include <QThread>
 
 #include "external/synchttp/synchttp.h"
+#include "lib/song.h"
 
 class LastFmScrobbler : public QThread
 {
@@ -57,33 +58,24 @@ class LastFmScrobbler : public QThread
 		void authFailed(const int);
 
 	private:
-		typedef struct {
-			QString artist;
-			QString album;
-			QString title;
-			quint32 track;
-			quint32 length;
-			QString current_time;
-		} song;
+		ScrobblingSong m_currentSong;
+		QList<ScrobblingSong> m_songs;
+		QMutex m_songsMutex;
 
-		song current_song;
-		QList<song> songs;
-		QMutex songs_lock;
-
-		SyncHTTP http;
-		QDateTime startPlayingDateTime;
-		quint32 timePlayed;
-		bool enabled;
-		int failures;
+		SyncHTTP m_http;
+		QDateTime m_startPlayingDateTime;
+		quint32 m_timePlayed;
+		bool m_enabled;
+		int m_failures;
 		bool hs_failed;
 		uint hs_timestamp;
 		int hs_failures;
 
-		const QString api_key;
-		const QString secret_key;
-		QString sessionID;
-		QString nowPlayingURL;
-		QString submissionURL;
+		const QString m_api_key;
+		const QString m_secret_key;
+		QString m_sessionID;
+		QString m_nowPlayingURL;
+		QString m_submissionURL;
 
 		QString generateURL(QMap<QString, QString> args);
 		QString apiSig(QMap<QString, QString> args);
