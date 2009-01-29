@@ -50,6 +50,7 @@ SET( QTMPC_MOC_HDRS
 	lib/lastfm_scrobbling.h
 	lib/mpdconnection.h
 	lib/mpddatabaseconnection.h
+	lib/song.h
 	external/synchttp/synchttp.h
 )
 
@@ -170,6 +171,7 @@ ELSE( ENABLE_KDE_SUPPORT )
 ENDIF( ENABLE_KDE_SUPPORT )
 
 IF( ENABLE_KDE_SUPPORT )
-	install( FILES QtMPCui.rc DESTINATION  ${DATA_INSTALL_DIR}/QtMPC )
+	install( FILES QtMPCui.rc DESTINATION ${DATA_INSTALL_DIR}/QtMPC )
+	install( FILES QtMPC.notifyrc DESTINATION ${DATA_INSTALL_DIR}/QtMPC )
 	KDE4_INSTALL_ICONS( ${ICON_INSTALL_DIR} )
 ENDIF( ENABLE_KDE_SUPPORT )
