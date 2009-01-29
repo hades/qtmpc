@@ -34,7 +34,7 @@
 #include <KIcon>
 #include <KLocale>
 #include <KActionCollection>
-#include <KPassivePopup>
+#include <KNotification>
 #include <KStandardAction>
 #include <kaboutapplicationdialog.h>
 #endif
@@ -463,13 +463,24 @@ void MainWindow::updateCurrentSong(const Song *song)
 
 	if (settings.value("systemtrayPopup").toBool() && trayIcon != NULL && trayIcon->isVisible() && isHidden()) {
 		if (!song->title.isEmpty() && !song->artist.isEmpty() && !song->album.isEmpty()) {
-			QString text = "album:  " + song->album + "\n";
-			if (song->track > 0)
-				text += "track:  " + QString::number(song->track) + "\n";
-			text += "length: " + Song::formattedTime(song->time);
 #ifdef ENABLE_KDE_SUPPORT
-			KPassivePopup::message(song->artist + " - " + song->title, text, trayIcon);
+			const QString text(QString("<table>")
+				+ QString("<tr><td>Artist:</td><td>") + song->artist + "</td></tr>"
+				+ QString("<tr><td>Album:</td><td>") + song->album + "</td></tr>"
+				+ QString("<tr><td>Song:</td><td>") + song->title + "</td></tr>"
+				+ QString("<tr><td>Track:</td><td>") + QString::number(song->track) + "</td></tr>"
+				+ QString("<tr><td>Length:</td><td>") + Song::formattedTime(song->time) + "</td></tr>"
+				+ QString("</table>"));
+			KNotification *notification = new KNotification("CurrentTrackChanged", this);
+			notification->setText(text);
+			notification->sendEvent();
 #else
+			const QString text(
+				"album:  " + song->album + "\n"
+				+ "track:  " + QString::number(song->track) + "\n"
+				+ "length: " + Song::formattedTime(song->time)
+			);
+
 			trayIcon->showMessage(song->artist + " - " + song->title, text,
 				QSystemTrayIcon::Information, 5000);
 #endif
