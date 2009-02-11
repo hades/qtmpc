@@ -19,13 +19,9 @@
  */
 
 #include <QtGui>
-#include <QIcon>
-#include <QPixmap>
 #include <QSet>
 #include <QSettings>
 #include <QString>
-#include <QKeyEvent>
-#include <QHeaderView>
 #include <cstdlib>
 
 #ifdef ENABLE_KDE_SUPPORT
